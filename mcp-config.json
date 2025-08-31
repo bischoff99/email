@@ -1,0 +1,106 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    },
+    "sequentialthinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {}
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "env": {}
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "@agent-infra/mcp-server-browser"],
+      "env": {}
+    },
+    "email": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-email"],
+      "env": {
+        "EMAIL_HOST": "mail.hostinger.com",
+        "EMAIL_PORT": "993",
+        "EMAIL_USER": "${EMAIL_USER}",
+        "EMAIL_PASSWORD": "${EMAIL_PASSWORD}"
+      }
+    },
+    "imap": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-imap"],
+      "env": {
+        "IMAP_HOST": "mail.hostinger.com",
+        "IMAP_PORT": "993",
+        "IMAP_USER": "${EMAIL_USER}",
+        "IMAP_PASSWORD": "${EMAIL_PASSWORD}"
+      }
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-puppeteer"],
+      "env": {
+        "PUPPETEER_HEADLESS": "false",
+        "PUPPETEER_TIMEOUT": "30000"
+      }
+    },
+    "testing": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-testing"],
+      "env": {}
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase"],
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}"
+      }
+    },
+    "http": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-http"],
+      "env": {}
+    },
+    "webhook": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-webhook"],
+      "env": {}
+    },
+    "cron": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-cron"],
+      "env": {}
+    },
+    "sentry": {
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server"],
+      "env": {
+        "SENTRY_DSN": "${SENTRY_DSN}"
+      }
+    },
+    "logging": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-logging"],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    },
+    "heroku": {
+      "command": "npx",
+      "args": ["-y", "@heroku/mcp-server"],
+      "env": {
+        "HEROKU_API_KEY": "${HEROKU_API_KEY}"
+      }
+    },
+    "docker": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-docker"],
+      "env": {}
+    }
+  }
+}

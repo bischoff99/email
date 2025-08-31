@@ -1,0 +1,46 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["@upstash/context7-mcp"],
+      "env": {}
+    },
+    "sequentialthinking": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-sequential-thinking"],
+      "env": {}
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem"],
+      "env": {}
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["@agent-infra/mcp-server-browser"],
+      "env": {}
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["@supabase/mcp-server-supabase"],
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}"
+      }
+    },
+    "sentry": {
+      "command": "npx",
+      "args": ["@sentry/mcp-server"],
+      "env": {
+        "SENTRY_DSN": "${SENTRY_DSN}"
+      }
+    },
+    "heroku": {
+      "command": "npx",
+      "args": ["@heroku/mcp-server"],
+      "env": {
+        "HEROKU_API_KEY": "${HEROKU_API_KEY}"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+import { BaseExtractor } from './extractors/_base';
+type ExtractorConstructor = new (document: Document, url: string, schemaOrgData?: any) => BaseExtractor;
+interface ExtractorMapping {
+    patterns: (string | RegExp)[];
+    extractor: ExtractorConstructor;
+}
+export declare class ExtractorRegistry {
+    private static mappings;
+    private static domainCache;
+    static initialize(): void;
+    static register(mapping: ExtractorMapping): void;
+    static findExtractor(document: Document, url: string, schemaOrgData?: any): BaseExtractor | null;
+    static clearCache(): void;
+}
+export {};
