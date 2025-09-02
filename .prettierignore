@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.min.js
+*.bundle.js
+pnpm-lock.yaml
+package-lock.json
+.git/
+.husky/
+logs/
+*.log

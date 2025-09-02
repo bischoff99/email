@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  email-server:
+    environment:
+      - NODE_ENV=staging
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M

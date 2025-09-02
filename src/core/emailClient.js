@@ -9,7 +9,7 @@ class HostingerEmailClient {
       tls: config.tls !== false,
       user: config.user,
       password: config.password,
-      ...config
+      ...config,
     };
     this.imap = new Imap(this.config);
   }
@@ -46,12 +46,11 @@ class HostingerEmailClient {
             return resolve([]);
           }
 
-          const limitedResults = options.limit ? 
-            results.slice(-options.limit) : results;
+          const limitedResults = options.limit ? results.slice(-options.limit) : results;
 
           const fetch = this.imap.fetch(limitedResults, {
             bodies: '',
-            struct: true
+            struct: true,
           });
 
           const emails = [];
@@ -62,7 +61,7 @@ class HostingerEmailClient {
             msg.on('body', (stream) => {
               simpleParser(stream, (err, parsed) => {
                 if (err) return;
-                
+
                 emailData = {
                   messageId: parsed.messageId,
                   subject: parsed.subject,
@@ -71,7 +70,7 @@ class HostingerEmailClient {
                   date: parsed.date,
                   text: parsed.text,
                   html: parsed.html,
-                  attachments: parsed.attachments || []
+                  attachments: parsed.attachments || [],
                 };
               });
             });
@@ -129,5 +128,3 @@ class HostingerEmailClient {
 }
 
 module.exports = HostingerEmailClient;
-
-

@@ -31,7 +31,6 @@ class EmailVerificationWorkflow {
       const result = await this.puppeteerHelper.waitForVerificationComplete(page);
 
       return { success: true, result };
-
     } catch (error) {
       throw new Error(`Verification workflow failed: ${error.message}`);
     } finally {
@@ -41,20 +40,21 @@ class EmailVerificationWorkflow {
 
   async waitForVerificationEmail(senderEmail, maxWaitTime) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < maxWaitTime) {
       const emails = await this.emailClient.getLatestFromSender(senderEmail, 1);
-      
+
       if (emails.length > 0) {
         const emailAge = Date.now() - new Date(emails[0].date).getTime();
-        if (emailAge < 300000) { // 5 minutes
+        if (emailAge < 300000) {
+          // 5 minutes
           return emails[0];
         }
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
-    
+
     throw new Error('Verification email not received within timeout');
   }
 
@@ -67,5 +67,3 @@ class EmailVerificationWorkflow {
 }
 
 module.exports = EmailVerificationWorkflow;
-
-

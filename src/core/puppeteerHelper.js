@@ -9,7 +9,7 @@ class PuppeteerHelper {
   async initialize() {
     this.browser = await puppeteer.launch({
       headless: this.config.headless,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
   }
 
@@ -28,6 +28,7 @@ class PuppeteerHelper {
   async waitForVerificationComplete(page) {
     await page.waitForSelector('.verification-success', { timeout: 10000 });
     return await page.evaluate(() => {
+      // eslint-disable-next-line no-undef
       return document.querySelector('.verification-success').textContent;
     });
   }
@@ -40,5 +41,3 @@ class PuppeteerHelper {
 }
 
 module.exports = PuppeteerHelper;
-
-

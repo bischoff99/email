@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  email-server:
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=error
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

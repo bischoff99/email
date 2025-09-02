@@ -18,11 +18,14 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 # Create app directory
 WORKDIR /usr/src/app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install production dependencies
-RUN npm ci --only=production
+RUN pnpm install --prod --ignore-scripts
 
 # Copy application source
 COPY . .

@@ -1,11 +1,11 @@
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const winston = require("winston");
-const rateLimit = require("express-rate-limit");
-const emailRoutes = require("./routes/email");
-const automationRoutes = require("./routes/automation");
-const Sentry = require("@sentry/node");
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const winston = require('winston');
+const rateLimit = require('express-rate-limit');
+const emailRoutes = require('./routes/email');
+const automationRoutes = require('./routes/automation');
+const Sentry = require('@sentry/node');
 
 const app = express();
 
@@ -19,12 +19,9 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+    }),
+  ],
 });
 
 // Make logger available globally
@@ -48,40 +45,59 @@ const automationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  },
+}));
+
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:3000',
+  credentials: true
+}));
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(limiter);
 
 // Request logging middleware
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`, {
     ip: req.ip,
-    userAgent: req.get('user-agent')
+    userAgent: req.get('user-agent'),
   });
   next();
 });
 
 // Routes
-app.use("/api/emails", emailRoutes);
-app.use("/api/automation", automationLimiter, automationRoutes);
+app.use('/api/emails', emailRoutes);
+app.use('/api/automation', automationLimiter, automationRoutes);
 
 // Health check
-app.get("/health", (req, res) => {
-  res.json({ 
-    status: "healthy", 
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
     timestamp: new Date(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
-// Test Sentry endpoint
-app.get("/debug-sentry", function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
-});
+// Debug endpoint (only in development)
+if (process.env.NODE_ENV === 'development') {
+  app.get('/debug-sentry', function mainHandler(req, res) {
+    logger.info('Debug Sentry endpoint called', {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+    res.status(500).json({ error: 'Test error for Sentry' });
+    throw new Error('My first Sentry error!');
+  });
+}
 
 // Sentry error handler must be registered after all controllers and before any other error middleware
 Sentry.setupExpressErrorHandler(app);
@@ -90,17 +106,18 @@ Sentry.setupExpressErrorHandler(app);
 app.use(function onError(err, req, res, next) {
   // Log the error
   logger.error('Unhandled error:', err);
-  
+
   // The error id is attached to `res.sentry` to be returned
   // and optionally displayed to the user for support.
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal Server Error' 
-      : err.message,
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
     sentryId: res.sentry,
-    timestamp: new Date()
+    timestamp: new Date(),
   });
+
+  // Call next() to pass control to the next error handler
+  if (next) next(err);
 });
 
 module.exports = app;
