@@ -4,10 +4,36 @@ const config = require('../../core/config');
 
 const router = express.Router();
 
+// Validation middleware
+const validateConfig = (req, res, next) => {
+  if (!config.email.user || !config.email.password) {
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Email configuration is missing. Please set EMAIL_USER and EMAIL_PASSWORD environment variables.' 
+    });
+  }
+  next();
+};
+
 // Execute verification workflow
-router.post('/verify-email', async (req, res) => {
+router.post('/verify-email', validateConfig, async (req, res) => {
   try {
-    const { senderEmail, maxWaitTime } = req.body;
+    const { senderEmail, maxWaitTime = 60000 } = req.body;
+    
+    // Validate input
+    if (!senderEmail || !senderEmail.includes('@')) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid sender email address' 
+      });
+    }
+    
+    if (maxWaitTime < 5000 || maxWaitTime > 300000) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Max wait time must be between 5 seconds and 5 minutes' 
+      });
+    }
     
     const workflow = new EmailVerificationWorkflow(
       config.email, 
@@ -19,9 +45,18 @@ router.post('/verify-email', async (req, res) => {
       maxWaitTime
     );
     
-    res.json({ success: true, result });
+    res.json({ 
+      success: true, 
+      result,
+      timestamp: new Date()
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Verification workflow error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      timestamp: new Date()
+    });
   }
 });
 

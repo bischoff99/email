@@ -121,7 +121,7 @@ class HostingerEmailClient {
   }
 
   extractVerificationCode(emailContent) {
-    const codeRegex = /(?:code|token|otp)[\s:]*([A-Z0-9]{4,8})/gi;
+    const codeRegex = /(?:code|token|otp)\s*(?:is)?\s*:?\s*([A-Z0-9]{4,8})/i;
     const content = emailContent.text || emailContent.html || '';
     const match = codeRegex.exec(content);
     return match ? match[1] : null;
