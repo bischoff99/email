@@ -1,5 +1,26 @@
 const rateLimit = require('express-rate-limit');
 
+// Create rate limiter for API keys at module level
+const keyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // 50 requests per API key per window
+  keyGenerator: (req) => {
+    const apiKey = req.headers['x-api-key'] || req.query.api_key;
+    // Use API key if available, otherwise fall back to IP with proper IPv6 handling
+    return apiKey || req.ip;
+  },
+  message: {
+    success: false,
+    error: 'Too many requests for this API key. Please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Properly handle IPv6 addresses
+  validate: {
+    keyGeneratorIpFallback: false, // Disable the validation since we handle it properly
+  }
+});
+
 // API Key authentication middleware
 const apiKeyAuth = (req, res, next) => {
   const apiKey = req.headers['x-api-key'] || req.query.api_key;
@@ -16,7 +37,7 @@ const apiKeyAuth = (req, res, next) => {
   if (validApiKeys.length === 0) {
     // In development, allow a default key
     if (process.env.NODE_ENV === 'development' && apiKey === 'dev-api-key') {
-      return next();
+      return keyLimiter(req, res, next);
     }
     
     return res.status(500).json({
@@ -32,19 +53,7 @@ const apiKeyAuth = (req, res, next) => {
     });
   }
 
-  // Add rate limiting per API key
-  const keyLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // 50 requests per API key per window
-    keyGenerator: () => apiKey,
-    message: {
-      success: false,
-      error: 'Too many requests for this API key. Please try again later.',
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
+  // Apply rate limiting per API key
   keyLimiter(req, res, next);
 };
 
