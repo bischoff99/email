@@ -46,6 +46,7 @@
   "license": "ISC",
   "dependencies": {
     "@agent-infra/mcp-server-browser": "^1.2.20",
+    "@anthropic-ai/sdk": "^0.61.0",
     "@heroku/mcp-server": "^1.0.7",
     "@modelcontextprotocol/server-filesystem": "^2025.8.21",
     "@modelcontextprotocol/server-sequential-thinking": "^2025.7.1",
