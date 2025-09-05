@@ -5,6 +5,7 @@ const winston = require('winston');
 const rateLimit = require('express-rate-limit');
 const emailRoutes = require('./routes/email');
 const automationRoutes = require('./routes/automation');
+const aiRoutes = require('./routes/ai');
 const Sentry = require('@sentry/node');
 const config = require('../core/config');
 const fs = require('fs');
@@ -177,6 +178,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/emails', emailRoutes);
 app.use('/api/automation', automationLimiter, automationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Liveness probe (always healthy)
 app.get('/live', (req, res) => {
@@ -198,6 +200,7 @@ app.get('/health', async (req, res) => {
     checks: {
       email: { status: 'unknown', message: 'Not tested' },
       database: { status: 'unknown', message: 'Not configured' },
+      ai: { status: 'unknown', message: 'Not tested' },
     }
   };
 
@@ -226,6 +229,20 @@ app.get('/health', async (req, res) => {
     }
   } else {
     healthCheck.checks.email = { status: 'unconfigured', message: 'Email credentials not set' };
+  }
+
+  // Test AI service availability
+  try {
+    const ClaudeAIService = require('../core/aiService');
+    const aiService = new ClaudeAIService(process.env.ANTHROPIC_API_KEY);
+    
+    if (aiService.isEnabled()) {
+      healthCheck.checks.ai = { status: 'healthy', message: 'AI service ready' };
+    } else {
+      healthCheck.checks.ai = { status: 'unconfigured', message: 'ANTHROPIC_API_KEY not set' };
+    }
+  } catch (error) {
+    healthCheck.checks.ai = { status: 'unhealthy', message: `AI service error: ${error.message}` };
   }
 
   // Check if any critical systems are unhealthy

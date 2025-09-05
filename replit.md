@@ -10,6 +10,10 @@ This is a Node.js email integration server that provides automated email verific
 - **Environment**: Development (switches to production on deployment)
 
 ## Recent Changes (September 5, 2025)
+- **✅ Integrated Hugging Face AI service** with user's Pro account for email intelligence
+- Added comprehensive AI endpoints for email analysis, categorization, and response generation
+- Multi-provider AI support with automatic fallback (Hugging Face → Claude → OpenAI → Gemini)
+- Enhanced AI features: sentiment analysis, language detection, action item extraction
 - Configured server to bind to 0.0.0.0 for external access
 - Updated CORS configuration to support Replit domains (*.repl.co, *.id.repl.co)
 - Added trust proxy support for proper client IP detection
@@ -32,15 +36,29 @@ This is a Node.js email integration server that provides automated email verific
 - `/src/api/server.js` - Main Express application setup
 - `/src/core/config.js` - Environment configuration and validation
 - `/src/core/emailClient.js` - IMAP email client
+- `/src/core/huggingfaceService.js` - **NEW** Hugging Face AI service with Pro features
+- `/src/core/aiService.js` - Anthropic Claude AI service (fallback)
+- `/src/core/multiAIService.js` - **NEW** Multi-provider AI orchestration
 - `/src/core/puppeteerHelper.js` - Browser automation utilities
 - `/src/automation/emailVerification.js` - Verification workflows
+- `/src/api/routes/ai.js` - **NEW** AI-powered email processing endpoints
 
 ## API Endpoints
+### Core Email API
 - `GET /health` - Health check with comprehensive status
 - `GET /api/emails/latest/:sender` - Retrieve latest emails
 - `POST /api/emails/search` - Search emails with IMAP criteria
 - `POST /api/emails/extract-links` - Extract verification links
 - `POST /api/automation/verify-email` - Automated verification workflow
+
+### **NEW** AI-Powered Email Processing
+- `GET /api/ai/status` - AI service status and capabilities
+- `POST /api/ai/analyze-email` - Comprehensive email analysis (category, sentiment, priority)
+- `POST /api/ai/generate-response` - AI-generated professional email responses
+- `POST /api/ai/categorize-emails` - Batch email categorization
+- `POST /api/ai/extract-actions` - Extract action items and deadlines
+- `POST /api/ai/summarize-thread` - Summarize email conversation threads
+- `POST /api/ai/smart-process` - Combined analysis and response generation
 
 ## User Preferences
 - **No specific preferences documented yet**
@@ -54,10 +72,18 @@ This is a Node.js email integration server that provides automated email verific
 - **Health Check**: `/health` endpoint
 - **Environment**: NODE_ENV=production (auto-set by Replit)
 
-## Required Secrets (Optional)
-The server can run without these but full functionality requires:
-- `EMAIL_USER` - Email account username
-- `EMAIL_PASSWORD` - Email account password
+## Required Secrets
+### Email Integration (Required for full functionality)
+- `EMAIL_USER` - Email account username (✅ configured: zubrusnojus@thrivzly.com)
+- `EMAIL_PASSWORD` - Email account password (✅ configured)
+
+### AI Services (Choose one or more)
+- `HUGGINGFACE_API_TOKEN` - **✅ ACTIVE** Hugging Face Pro account for AI features
+- `ANTHROPIC_API_KEY` - Claude AI service (fallback)
+- `OPENAI_API_KEY` - OpenAI GPT models (fallback)
+- `GEMINI_API_KEY` - Google Gemini models (fallback)
+
+### Optional Services
 - `SENTRY_DSN` - Error tracking (optional)
 - `SECRET_KEY` - API authentication (optional)
 
