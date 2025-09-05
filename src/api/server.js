@@ -175,6 +175,52 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root homepage route
+app.get('/', (req, res) => {
+  const baseUrl = req.protocol + '://' + req.get('host');
+  
+  res.json({
+    success: true,
+    message: "🚀 Email Integration Server with AI Features",
+    version: "1.0.0",
+    status: "running",
+    features: [
+      "📧 Email Management (IMAP)",
+      "🤖 AI-Powered Email Analysis", 
+      "🔄 Automated Email Verification",
+      "📊 Email Categorization & Sentiment Analysis",
+      "✍️ AI Response Generation",
+      "🔍 Action Item Extraction"
+    ],
+    endpoints: {
+      health: `${baseUrl}/health`,
+      email_api: {
+        base: `${baseUrl}/api/emails`,
+        latest: `${baseUrl}/api/emails/latest/:sender`,
+        search: `${baseUrl}/api/emails/search`,
+        extract_links: `${baseUrl}/api/emails/extract-links`
+      },
+      ai_api: {
+        base: `${baseUrl}/api/ai`,
+        status: `${baseUrl}/api/ai/status`,
+        analyze: `${baseUrl}/api/ai/analyze-email`,
+        generate_response: `${baseUrl}/api/ai/generate-response`,
+        categorize: `${baseUrl}/api/ai/categorize-emails`,
+        extract_actions: `${baseUrl}/api/ai/extract-actions`,
+        summarize: `${baseUrl}/api/ai/summarize-thread`,
+        smart_process: `${baseUrl}/api/ai/smart-process`
+      },
+      automation_api: {
+        base: `${baseUrl}/api/automation`,
+        verify_email: `${baseUrl}/api/automation/verify-email`
+      }
+    },
+    ai_provider: process.env.HUGGINGFACE_API_TOKEN ? "Hugging Face Pro" : 
+                 process.env.ANTHROPIC_API_KEY ? "Anthropic Claude" : "None",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Routes
 app.use('/api/emails', emailRoutes);
 app.use('/api/automation', automationLimiter, automationRoutes);
