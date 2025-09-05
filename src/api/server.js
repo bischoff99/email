@@ -12,6 +12,12 @@ const path = require('path');
 
 const app = express();
 
+// Trust proxy for proper client IPs behind Replit proxy
+app.set('trust proxy', 1);
+
+// Disable x-powered-by header
+app.disable('x-powered-by');
+
 // Ensure logs directory exists
 const logsDir = path.dirname(config.logging.file);
 if (!fs.existsSync(logsDir)) {
@@ -19,20 +25,20 @@ if (!fs.existsSync(logsDir)) {
 }
 
 // Configure logger with file and console transports
-const logger = winston.createLogger({
-  level: config.logging.level,
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
+const transports = [
+  new winston.transports.Console({
+    format: process.env.NODE_ENV === 'production' 
+      ? winston.format.json()
+      : winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        ),
+  })
+];
+
+// Add file transports only in development
+if (process.env.NODE_ENV !== 'production') {
+  transports.push(
     new winston.transports.File({
       filename: config.logging.file,
       maxsize: 5242880, // 5MB
@@ -43,8 +49,18 @@ const logger = winston.createLogger({
       level: 'error',
       maxsize: 5242880, // 5MB
       maxFiles: 5,
-    }),
-  ],
+    })
+  );
+}
+
+const logger = winston.createLogger({
+  level: config.logging.level,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports,
 });
 
 // Make logger available globally
@@ -54,6 +70,7 @@ app.locals.logger = logger;
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  skip: (req) => req.method === 'OPTIONS', // Skip preflight requests
   message: {
     success: false,
     error: 'Too many requests from this IP, please try again later.',
@@ -87,18 +104,44 @@ const automationLimiter = rateLimit({
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-    },
-  },
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: 'no-referrer' },
 }));
 
+// CORS configuration with Replit support
 app.use(cors({
-  origin: config.security.allowedOrigins,
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check against configured origins
+    const allowedOrigins = config.security.allowedOrigins;
+    if (allowedOrigins.includes(origin.toLowerCase())) {
+      return callback(null, true);
+    }
+    
+    // Allow Replit domains
+    if (/^https:\/\/.+\.repl\.co$/i.test(origin) || /^https:\/\/.+\.id\.repl\.co$/i.test(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost/127.0.0.1 on any port in development
+    if (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+      return callback(null, true);
+    }
+    
+    callback(null, false);
+  },
+  credentials: false,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-Requested-With']
 }));
+
+// Sentry request handler must be first (if available)
+if (Sentry.Handlers && Sentry.Handlers.requestHandler) {
+  app.use(Sentry.Handlers.requestHandler());
+}
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
@@ -134,6 +177,11 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/emails', emailRoutes);
 app.use('/api/automation', automationLimiter, automationRoutes);
+
+// Liveness probe (always healthy)
+app.get('/live', (req, res) => {
+  res.json({ status: 'alive', timestamp: new Date() });
+});
 
 // Health check with more comprehensive checks
 app.get('/health', async (req, res) => {
@@ -229,8 +277,7 @@ app.use(function onError(err, req, res, next) {
     timestamp: new Date(),
   });
 
-  // Call next() to pass control to the next error handler
-  if (next) next(err);
+  // Do not call next() after sending response to prevent double handling
 });
 
 module.exports = app;

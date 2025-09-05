@@ -7,10 +7,26 @@ class PuppeteerHelper {
   }
 
   async initialize() {
-    this.browser = await puppeteer.launch({
+    const launchArgs = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-gpu',
+      '--no-zygote',
+      '--disable-dev-shm-usage',
+      '--disable-web-security',
+    ];
+    
+    const launchOptions = {
       headless: this.config.headless,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+      args: launchArgs,
+    };
+    
+    // Use custom executable path if provided (for Replit)
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+    
+    this.browser = await puppeteer.launch(launchOptions);
   }
 
   async navigateToVerification(verificationLink) {

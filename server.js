@@ -7,11 +7,23 @@ const config = require('./src/core/config');
 const logger = app.locals.logger;
 const PORT = config.server.port;
 
-const server = app.listen(PORT, () => {
-  logger.info(`🚀 Email Integration Server running on port ${PORT}`);
-  logger.info(`🔍 Health check: http://localhost:${PORT}/health`);
-  logger.info(`📧 Email API: http://localhost:${PORT}/api/emails`);
-  logger.info(`🤖 Automation API: http://localhost:${PORT}/api/automation`);
+const HOST = config.server.host;
+const server = app.listen(PORT, HOST, () => {
+  logger.info(`🚀 Email Integration Server running on ${HOST}:${PORT}`);
+  
+  // Show Replit URL if available
+  let publicUrl = `http://${HOST}:${PORT}`;
+  if (process.env.REPLIT_URL) {
+    publicUrl = process.env.REPLIT_URL;
+    logger.info(`🌐 Public URL: ${publicUrl}`);
+  } else if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+    publicUrl = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+    logger.info(`🌐 Public URL: ${publicUrl}`);
+  }
+  
+  logger.info(`🔍 Health check: ${publicUrl}/health`);
+  logger.info(`📧 Email API: ${publicUrl}/api/emails`);
+  logger.info(`🤖 Automation API: ${publicUrl}/api/automation`);
   logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 

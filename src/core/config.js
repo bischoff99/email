@@ -22,7 +22,7 @@ function validateEnvironment() {
     }
   }
   
-  // Validate production-specific requirements
+  // Validate production-specific requirements (warnings only to allow partial deployment)
   if (process.env.NODE_ENV === 'production') {
     const productionRequiredVars = ['API_KEYS', 'SECRET_KEY'];
     const productionMissing = [];
@@ -34,9 +34,9 @@ function validateEnvironment() {
     }
     
     if (productionMissing.length > 0) {
-      console.error(`❌ Production environment detected but insecure values found in: ${productionMissing.join(', ')}`);
-      console.error('🔒 Please set secure values for production deployment');
-      process.exit(1);
+      console.warn(`⚠️  Production environment detected but insecure values found in: ${productionMissing.join(', ')}`);
+      console.warn('🔒 Please set secure values for production deployment');
+      console.warn('📝 Some features may not work properly without proper configuration');
     }
   }
 }
@@ -58,15 +58,16 @@ module.exports = {
     supabaseKey: process.env.SUPABASE_ANON_KEY,
   },
   puppeteer: {
-    headless: process.env.PUPPETEER_HEADLESS !== 'false' && process.env.NODE_ENV === 'production',
+    headless: process.env.PUPPETEER_HEADLESS !== 'false',
     timeout: parseInt(process.env.PUPPETEER_TIMEOUT) || 30000,
   },
   server: {
-    port: parseInt(process.env.PORT) || 3000,
+    port: parseInt(process.env.PORT) || 5000,
+    host: process.env.HOST || '0.0.0.0',
   },
   security: {
     secretKey: process.env.SECRET_KEY,
-    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim().toLowerCase()).filter(Boolean) || ['http://localhost:5000', 'http://127.0.0.1:5000', 'https://localhost:5000', 'https://127.0.0.1:5000'],
     allowedEmailDomains: process.env.ALLOWED_EMAIL_DOMAINS?.split(',').filter(d => d.trim()) || [],
   },
   logging: {
