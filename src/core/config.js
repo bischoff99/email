@@ -47,9 +47,8 @@ validateEnvironment();
 module.exports = {
   email: {
     host: process.env.EMAIL_HOST || 'mail.hostinger.com',
-    port: parseInt(process.env.EMAIL_PORT) || 143,
-    tls: false,
-    autotls: 'always',
+    port: parseInt(process.env.EMAIL_PORT) || 993,
+    tls: process.env.EMAIL_SECURE !== 'false',
     tlsOptions: {
       rejectUnauthorized: false, // Accept self-signed certificates
       servername: process.env.EMAIL_HOST || 'mail.hostinger.com'
