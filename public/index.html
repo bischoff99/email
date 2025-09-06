@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Integration Server - AI Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>🚀 Email Integration Server</h1>
+            <p class="subtitle">AI-Powered Email Automation & Processing Platform</p>
+            <div class="status-indicators">
+                <div class="status-item" id="server-status">
+                    <span class="indicator pending"></span>
+                    <span class="label">Server Status</span>
+                </div>
+                <div class="status-item" id="ai-status">
+                    <span class="indicator pending"></span>
+                    <span class="label">AI Provider</span>
+                </div>
+                <div class="status-item" id="email-status">
+                    <span class="indicator pending"></span>
+                    <span class="label">Email Connection</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="ai-features">🤖 AI Features</button>
+            <button class="tab-btn" data-tab="email-management">📧 Email Management</button>
+            <button class="tab-btn" data-tab="automation">🔄 Automation</button>
+            <button class="tab-btn" data-tab="status">📊 System Status</button>
+        </nav>
+
+        <!-- AI Features Tab -->
+        <div class="tab-content active" id="ai-features">
+            <div class="feature-grid">
+                <!-- Email Analysis Card -->
+                <div class="feature-card">
+                    <h3>📧 Email Analysis</h3>
+                    <p>Analyze email content with AI for category, priority, and sentiment</p>
+                    <form class="feature-form" id="analyze-form">
+                        <div class="form-group">
+                            <label for="email-content">Email Content:</label>
+                            <textarea id="email-content" name="emailContent" placeholder="Paste your email content here..." rows="6" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="analysis-type">Analysis Type:</label>
+                            <select id="analysis-type" name="analysisType">
+                                <option value="comprehensive">Comprehensive</option>
+                                <option value="quick">Quick</option>
+                                <option value="security">Security Check</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Analyze Email</button>
+                    </form>
+                    <div class="result-area" id="analysis-result"></div>
+                </div>
+
+                <!-- Response Generation Card -->
+                <div class="feature-card">
+                    <h3>✍️ Response Generation</h3>
+                    <p>Generate AI-powered professional email responses</p>
+                    <form class="feature-form" id="response-form">
+                        <div class="form-group">
+                            <label for="original-email">Original Email:</label>
+                            <textarea id="original-email" name="originalEmail" placeholder="Email you're responding to..." rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="response-context">Context (Optional):</label>
+                            <textarea id="response-context" name="context" placeholder="Additional context for the response..." rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="response-tone">Tone:</label>
+                            <select id="response-tone" name="tone">
+                                <option value="professional">Professional</option>
+                                <option value="friendly">Friendly</option>
+                                <option value="formal">Formal</option>
+                                <option value="casual">Casual</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate Response</button>
+                    </form>
+                    <div class="result-area" id="response-result"></div>
+                </div>
+
+                <!-- Action Items Extraction Card -->
+                <div class="feature-card">
+                    <h3>📋 Action Items Extraction</h3>
+                    <p>Extract tasks, deadlines, and action items from emails</p>
+                    <form class="feature-form" id="actions-form">
+                        <div class="form-group">
+                            <label for="actions-content">Email Content:</label>
+                            <textarea id="actions-content" name="emailContent" placeholder="Email content with tasks and deadlines..." rows="6" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Extract Actions</button>
+                    </form>
+                    <div class="result-area" id="actions-result"></div>
+                </div>
+
+                <!-- Smart Processing Card -->
+                <div class="feature-card">
+                    <h3>🧠 Smart Processing</h3>
+                    <p>Combined analysis and response generation in one step</p>
+                    <form class="feature-form" id="smart-form">
+                        <div class="form-group">
+                            <label for="smart-content">Email Content:</label>
+                            <textarea id="smart-content" name="emailContent" placeholder="Email to analyze and respond to..." rows="5" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="generate-response" name="generateResponse" checked>
+                                Generate Response
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="smart-tone">Response Tone:</label>
+                            <select id="smart-tone" name="tone">
+                                <option value="professional">Professional</option>
+                                <option value="friendly">Friendly</option>
+                                <option value="formal">Formal</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Smart Process</button>
+                    </form>
+                    <div class="result-area" id="smart-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Management Tab -->
+        <div class="tab-content" id="email-management">
+            <div class="feature-grid">
+                <!-- Email Search Card -->
+                <div class="feature-card">
+                    <h3>🔍 Email Search</h3>
+                    <p>Search and retrieve emails from your account</p>
+                    <form class="feature-form" id="search-form">
+                        <div class="form-group">
+                            <label for="search-sender">Sender Email:</label>
+                            <input type="email" id="search-sender" name="sender" placeholder="sender@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="search-subject">Subject Contains:</label>
+                            <input type="text" id="search-subject" name="subject" placeholder="Subject keywords...">
+                        </div>
+                        <div class="form-group">
+                            <label for="search-limit">Max Results:</label>
+                            <input type="number" id="search-limit" name="limit" value="10" min="1" max="50">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Search Emails</button>
+                    </form>
+                    <div class="result-area" id="search-result"></div>
+                </div>
+
+                <!-- Latest Emails Card -->
+                <div class="feature-card">
+                    <h3>📬 Latest Emails</h3>
+                    <p>Get the most recent emails from a specific sender</p>
+                    <form class="feature-form" id="latest-form">
+                        <div class="form-group">
+                            <label for="latest-sender">Sender Email:</label>
+                            <input type="email" id="latest-sender" name="sender" placeholder="sender@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="latest-count">Number of Emails:</label>
+                            <input type="number" id="latest-count" name="count" value="5" min="1" max="20">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Get Latest</button>
+                    </form>
+                    <div class="result-area" id="latest-result"></div>
+                </div>
+
+                <!-- Email Categorization Card -->
+                <div class="feature-card">
+                    <h3>🏷️ Batch Categorization</h3>
+                    <p>Categorize multiple emails automatically</p>
+                    <form class="feature-form" id="categorize-form">
+                        <div class="form-group">
+                            <label for="categorize-sender">Sender Email (to fetch emails):</label>
+                            <input type="email" id="categorize-sender" name="senderEmail" placeholder="sender@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="categorize-emails">Or paste emails (JSON array):</label>
+                            <textarea id="categorize-emails" name="emails" placeholder='[{"subject": "Meeting", "body": "Let\'s meet tomorrow"}]' rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Categorize</button>
+                    </form>
+                    <div class="result-area" id="categorize-result"></div>
+                </div>
+
+                <!-- Thread Summarization Card -->
+                <div class="feature-card">
+                    <h3>📝 Thread Summary</h3>
+                    <p>Summarize email conversations and threads</p>
+                    <form class="feature-form" id="summarize-form">
+                        <div class="form-group">
+                            <label for="summarize-sender">Sender Email (to fetch thread):</label>
+                            <input type="email" id="summarize-sender" name="senderEmail" placeholder="sender@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="summarize-emails">Or paste email thread (JSON array):</label>
+                            <textarea id="summarize-emails" name="emails" placeholder='[{"subject": "Re: Meeting", "body": "Email content"}]' rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Summarize Thread</button>
+                    </form>
+                    <div class="result-area" id="summarize-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Automation Tab -->
+        <div class="tab-content" id="automation">
+            <div class="feature-grid">
+                <!-- Email Verification Card -->
+                <div class="feature-card">
+                    <h3>✅ Email Verification</h3>
+                    <p>Automate email verification link processing</p>
+                    <form class="feature-form" id="verify-form">
+                        <div class="form-group">
+                            <label for="verify-sender">Expected Sender:</label>
+                            <input type="email" id="verify-sender" name="expectedSender" placeholder="noreply@service.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="verify-timeout">Timeout (seconds):</label>
+                            <input type="number" id="verify-timeout" name="timeout" value="30" min="10" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label for="verify-action">Action:</label>
+                            <select id="verify-action" name="action">
+                                <option value="extract">Extract Link Only</option>
+                                <option value="click">Extract and Click Link</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Start Verification</button>
+                    </form>
+                    <div class="result-area" id="verify-result"></div>
+                </div>
+
+                <!-- Link Extraction Card -->
+                <div class="feature-card">
+                    <h3>🔗 Link Extraction</h3>
+                    <p>Extract verification and action links from emails</p>
+                    <form class="feature-form" id="extract-form">
+                        <div class="form-group">
+                            <label for="extract-content">Email Content:</label>
+                            <textarea id="extract-content" name="emailContent" placeholder="Email content with links..." rows="6" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="extract-type">Link Type:</label>
+                            <select id="extract-type" name="linkType">
+                                <option value="verification">Verification Links</option>
+                                <option value="all">All Links</option>
+                                <option value="action">Action Links</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Extract Links</button>
+                    </form>
+                    <div class="result-area" id="extract-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status Tab -->
+        <div class="tab-content" id="status">
+            <div class="status-grid">
+                <!-- System Health Card -->
+                <div class="status-card">
+                    <h3>🏥 System Health</h3>
+                    <div id="health-status" class="status-content">
+                        <div class="loading">Loading health status...</div>
+                    </div>
+                </div>
+
+                <!-- AI Service Status Card -->
+                <div class="status-card">
+                    <h3>🤖 AI Service Status</h3>
+                    <div id="ai-service-status" class="status-content">
+                        <div class="loading">Loading AI status...</div>
+                    </div>
+                </div>
+
+                <!-- Server Information Card -->
+                <div class="status-card">
+                    <h3>⚙️ Server Information</h3>
+                    <div id="server-info" class="status-content">
+                        <div class="info-item">
+                            <span class="label">Environment:</span>
+                            <span class="value" id="env-value">Development</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Version:</span>
+                            <span class="value" id="version-value">1.0.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Uptime:</span>
+                            <span class="value" id="uptime-value">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Documentation Card -->
+                <div class="status-card">
+                    <h3>📚 API Documentation</h3>
+                    <div class="api-docs">
+                        <div class="endpoint-group">
+                            <h4>AI Features</h4>
+                            <div class="endpoint">POST /api/ai/analyze-email</div>
+                            <div class="endpoint">POST /api/ai/generate-response</div>
+                            <div class="endpoint">POST /api/ai/extract-actions</div>
+                            <div class="endpoint">POST /api/ai/smart-process</div>
+                        </div>
+                        <div class="endpoint-group">
+                            <h4>Email Management</h4>
+                            <div class="endpoint">GET /api/emails/latest/:sender</div>
+                            <div class="endpoint">POST /api/emails/search</div>
+                            <div class="endpoint">POST /api/ai/categorize-emails</div>
+                        </div>
+                        <div class="endpoint-group">
+                            <h4>Automation</h4>
+                            <div class="endpoint">POST /api/automation/verify-email</div>
+                            <div class="endpoint">POST /api/emails/extract-links</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

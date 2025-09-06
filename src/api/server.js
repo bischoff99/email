@@ -148,6 +148,19 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(limiter);
 
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../../public'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
+  setHeaders: (res, path) => {
+    // Disable caching for development
+    if (process.env.NODE_ENV !== 'production') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
+
 // Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
@@ -175,8 +188,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root homepage route
+// Dashboard route - serve the web interface
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../public/index.html'));
+});
+
+// Root homepage route - redirect to dashboard or show API info
 app.get('/', (req, res) => {
+  // Check if request prefers HTML (browser) vs JSON (API client)
+  const acceptsHtml = req.headers.accept && req.headers.accept.includes('text/html');
+  
+  if (acceptsHtml) {
+    // Redirect browsers to the dashboard
+    return res.redirect('/dashboard');
+  }
   const baseUrl = req.protocol + '://' + req.get('host');
   const aiProvider = process.env.OPENAI_API_KEY ? "OpenAI GPT-4" :
                      process.env.HUGGINGFACE_API_TOKEN ? "Hugging Face Pro" : 
