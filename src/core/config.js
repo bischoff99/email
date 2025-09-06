@@ -49,6 +49,10 @@ module.exports = {
     host: process.env.EMAIL_HOST || 'mail.hostinger.com',
     port: parseInt(process.env.EMAIL_PORT) || 993,
     tls: process.env.EMAIL_SECURE !== 'false',
+    tlsOptions: {
+      rejectUnauthorized: false, // Accept self-signed certificates
+      servername: process.env.EMAIL_HOST || 'mail.hostinger.com'
+    },
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
   },

@@ -277,15 +277,46 @@ app.get('/health', async (req, res) => {
     healthCheck.checks.email = { status: 'unconfigured', message: 'Email credentials not set' };
   }
 
-  // Test AI service availability
+  // Test AI service availability (prioritize Hugging Face)
   try {
-    const ClaudeAIService = require('../core/aiService');
-    const aiService = new ClaudeAIService(process.env.ANTHROPIC_API_KEY);
+    let aiService;
+    let aiProvider = 'none';
     
-    if (aiService.isEnabled()) {
-      healthCheck.checks.ai = { status: 'healthy', message: 'AI service ready' };
+    if (process.env.HUGGINGFACE_API_TOKEN) {
+      const HuggingFaceAIService = require('../core/huggingfaceService');
+      aiService = new HuggingFaceAIService(process.env.HUGGINGFACE_API_TOKEN);
+      aiProvider = 'Hugging Face Pro';
+    } else if (process.env.ANTHROPIC_API_KEY) {
+      const ClaudeAIService = require('../core/aiService');
+      aiService = new ClaudeAIService(process.env.ANTHROPIC_API_KEY);
+      aiProvider = 'Anthropic Claude';
+    }
+    
+    if (aiService && aiService.isEnabled()) {
+      healthCheck.checks.ai = { 
+        status: 'healthy', 
+        message: `AI service ready (${aiProvider})`,
+        provider: aiProvider
+      };
     } else {
-      healthCheck.checks.ai = { status: 'unconfigured', message: 'ANTHROPIC_API_KEY not set' };
+      const availableProviders = [];
+      if (process.env.HUGGINGFACE_API_TOKEN) availableProviders.push('Hugging Face');
+      if (process.env.ANTHROPIC_API_KEY) availableProviders.push('Claude');
+      if (process.env.OPENAI_API_KEY) availableProviders.push('OpenAI');
+      if (process.env.GEMINI_API_KEY) availableProviders.push('Gemini');
+      
+      if (availableProviders.length > 0) {
+        healthCheck.checks.ai = { 
+          status: 'healthy', 
+          message: `AI configured: ${availableProviders.join(', ')}`,
+          providers: availableProviders
+        };
+      } else {
+        healthCheck.checks.ai = { 
+          status: 'unconfigured', 
+          message: 'No AI providers configured (HUGGINGFACE_API_TOKEN, ANTHROPIC_API_KEY, etc.)' 
+        };
+      }
     }
   } catch (error) {
     healthCheck.checks.ai = { status: 'unhealthy', message: `AI service error: ${error.message}` };
