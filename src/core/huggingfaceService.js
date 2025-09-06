@@ -11,12 +11,12 @@ class HuggingFaceAIService {
     this.hf = new HfInference(apiToken);
     this.enabled = true;
     
-    // Available models with Hugging Face Pro
+    // Available models with Hugging Face Free API (2025)
     this.models = {
-      fast: 'microsoft/DialoGPT-medium', // Fast for simple tasks
-      smart: 'meta-llama/Llama-2-70b-chat-hf', // High quality for complex analysis
-      coding: 'codellama/CodeLlama-34b-Instruct-hf', // Specialized for code
-      multilingual: 'google/flan-t5-xxl' // Good for multiple languages
+      fast: 'openai-community/gpt2', // Fast for simple tasks
+      smart: 'microsoft/DialoGPT-medium', // Reliable conversation model
+      coding: 'openai-community/gpt2', // Simple but reliable
+      multilingual: 'google/flan-t5-small' // Good for multiple languages
     };
     
     console.log('✅ Hugging Face AI service initialized with Pro account features');
