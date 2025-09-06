@@ -4,7 +4,7 @@ const { simpleParser } = require('mailparser');
 class HostingerEmailClient {
   constructor(config) {
     this.config = {
-      host: config.host || 'mail.hostinger.com',
+      host: config.host || 'imap.hostinger.com',
       port: config.port || 993,
       tls: config.tls !== false,
       user: config.user,
