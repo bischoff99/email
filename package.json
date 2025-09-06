@@ -63,6 +63,7 @@
     "imap": "^0.8.17",
     "mailparser": "^3.7.4",
     "mcp-server-docker": "^1.0.0",
+    "openai": "^5.19.1",
     "puppeteer": "^24.17.1",
     "winston": "^3.17.0"
   },

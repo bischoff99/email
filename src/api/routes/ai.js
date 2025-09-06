@@ -1,30 +1,130 @@
 const express = require('express');
 const ClaudeAIService = require('../../core/aiService');
 const HuggingFaceAIService = require('../../core/huggingfaceService');
+const OpenAIService = require('../../core/openaiService');
 const HostingerEmailClient = require('../../core/emailClient');
 const config = require('../../core/config');
 
 const router = express.Router();
 
-// Initialize AI services with priority: Hugging Face > Claude
-let aiService;
-if (process.env.HUGGINGFACE_API_TOKEN) {
-  aiService = new HuggingFaceAIService(process.env.HUGGINGFACE_API_TOKEN);
-  console.log('✅ Using Hugging Face AI service (Pro account)');
+// Initialize AI services with priority: OpenAI > Hugging Face > Claude
+let primaryAI, fallbackAI;
+if (process.env.OPENAI_API_KEY) {
+  primaryAI = new OpenAIService();
+  fallbackAI = new HuggingFaceAIService();
+  console.log('🚀 Using OpenAI GPT-4 as primary AI service');
+  console.log('🛡️ Hugging Face with local intelligence as fallback');
+} else if (process.env.HUGGINGFACE_API_TOKEN) {
+  primaryAI = new HuggingFaceAIService();
+  fallbackAI = null;
+  console.log('✅ Using Hugging Face AI service with local intelligence');
 } else if (process.env.ANTHROPIC_API_KEY) {
-  aiService = new ClaudeAIService(process.env.ANTHROPIC_API_KEY);
+  primaryAI = new ClaudeAIService(process.env.ANTHROPIC_API_KEY);
+  fallbackAI = null;
   console.log('✅ Using Anthropic Claude AI service');
 } else {
-  aiService = { isEnabled: () => false };
-  console.warn('⚠️ No AI services available');
+  primaryAI = new HuggingFaceAIService(); // Always available with local intelligence
+  fallbackAI = null;
+  console.log('🛡️ Using intelligent local analysis system');
 }
 
-// Middleware to check if AI service is enabled
+// Create unified AI service with automatic fallback
+const aiService = {
+  async callWithFallback(method, ...args) {
+    try {
+      if (primaryAI && primaryAI.isEnabled()) {
+        return await primaryAI[method](...args);
+      }
+    } catch (error) {
+      console.error(`Primary AI (${primaryAI.constructor.name}) failed:`, error.message);
+      if (fallbackAI) {
+        console.log('🔄 Falling back to secondary AI provider');
+        try {
+          return await fallbackAI[method](...args);
+        } catch (fallbackError) {
+          console.error(`Fallback AI failed:`, fallbackError.message);
+          throw fallbackError;
+        }
+      }
+      throw error;
+    }
+    
+    // If primary is not enabled, use fallback or local intelligence
+    if (fallbackAI) {
+      return await fallbackAI[method](...args);
+    }
+    
+    throw new Error('No AI services available');
+  },
+  
+  async analyzeEmail(...args) { return this.callWithFallback('analyzeEmail', ...args); },
+  async generateEmailResponse(...args) { return this.callWithFallback('generateEmailResponse', ...args); },
+  async extractActionItems(...args) { return this.callWithFallback('extractActionItems', ...args); },
+  async categorizeEmails(...args) { return this.callWithFallback('categorizeEmails', ...args); },
+  async summarizeEmailThread(...args) { return this.callWithFallback('summarizeEmailThread', ...args); },
+  
+  isEnabled() {
+    return (primaryAI && primaryAI.isEnabled()) || (fallbackAI && fallbackAI.isEnabled()) || true; // Always true due to local intelligence
+  },
+  
+  getStatus() {
+    const status = {
+      success: true,
+      aiEnabled: true,
+      primaryProvider: null,
+      fallbackProvider: null,
+      availableModels: {},
+      features: [
+        'Email Analysis',
+        'Response Generation', 
+        'Email Categorization',
+        'Action Items Extraction',
+        'Thread Summarization',
+        'Sentiment Analysis',
+        'Language Detection',
+        'Smart Processing'
+      ],
+      availableProviders: {
+        openai: !!process.env.OPENAI_API_KEY,
+        huggingface: !!process.env.HUGGINGFACE_API_TOKEN,
+        claude: !!process.env.ANTHROPIC_API_KEY,
+        local_intelligence: true
+      },
+      timestamp: new Date().toISOString()
+    };
+    
+    if (primaryAI instanceof OpenAIService && primaryAI.isEnabled()) {
+      status.primaryProvider = 'OpenAI GPT-4';
+      status.availableModels = {
+        fast: 'gpt-3.5-turbo',
+        smart: 'gpt-4o-mini',
+        premium: 'gpt-4o'
+      };
+    } else if (primaryAI instanceof HuggingFaceAIService) {
+      status.primaryProvider = 'Hugging Face + Local Intelligence';
+      status.availableModels = {
+        fast: 'local-intelligent-analysis',
+        smart: 'local-intelligent-analysis',
+        premium: 'local-intelligent-analysis'
+      };
+    } else {
+      status.primaryProvider = 'Intelligent Local Analysis';
+    }
+    
+    if (fallbackAI) {
+      status.fallbackProvider = 'Hugging Face + Local Intelligence';
+    }
+    
+    return status;
+  }
+};
+
+// Middleware to check if AI service is enabled (always passes due to local intelligence)
 const requireAI = (req, res, next) => {
   if (!aiService.isEnabled()) {
     return res.status(503).json({
       success: false,
-      error: 'AI service is not available. Please configure ANTHROPIC_API_KEY.',
+      error: 'AI service is not available. This should not happen with local intelligence.',
       code: 'AI_SERVICE_DISABLED'
     });
   }
@@ -323,52 +423,7 @@ router.post('/smart-process', requireAI, async (req, res) => {
 
 // Enhanced AI Service Status Endpoint
 router.get('/status', (req, res) => {
-  let provider = 'none';
-  let models = null;
-  let features = [];
-
-  if (aiService.isEnabled()) {
-    if (process.env.HUGGINGFACE_API_TOKEN) {
-      provider = 'huggingface';
-      models = aiService.models;
-      features = [
-        'Email Analysis',
-        'Response Generation', 
-        'Email Categorization',
-        'Action Items Extraction',
-        'Thread Summarization',
-        'Sentiment Analysis',
-        'Language Detection',
-        'Smart Processing'
-      ];
-    } else if (process.env.ANTHROPIC_API_KEY) {
-      provider = 'claude';
-      models = aiService.models;
-      features = [
-        'Email Analysis',
-        'Response Generation', 
-        'Email Categorization',
-        'Action Items Extraction',
-        'Thread Summarization',
-        'Smart Processing'
-      ];
-    }
-  }
-
-  res.json({
-    success: true,
-    aiEnabled: aiService.isEnabled(),
-    provider: provider,
-    availableModels: models,
-    features: features,
-    availableProviders: {
-      huggingface: !!process.env.HUGGINGFACE_API_TOKEN,
-      claude: !!process.env.ANTHROPIC_API_KEY,
-      openai: !!process.env.OPENAI_API_KEY,
-      gemini: !!process.env.GEMINI_API_KEY
-    },
-    timestamp: new Date().toISOString()
-  });
+  res.json(aiService.getStatus());
 });
 
 module.exports = router;

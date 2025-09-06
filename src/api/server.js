@@ -178,8 +178,9 @@ app.use((req, res, next) => {
 // Root homepage route
 app.get('/', (req, res) => {
   const baseUrl = req.protocol + '://' + req.get('host');
-  const aiProvider = process.env.HUGGINGFACE_API_TOKEN ? "Hugging Face Pro" : 
-                     process.env.ANTHROPIC_API_KEY ? "Anthropic Claude" : "None";
+  const aiProvider = process.env.OPENAI_API_KEY ? "OpenAI GPT-4" :
+                     process.env.HUGGINGFACE_API_TOKEN ? "Hugging Face Pro" : 
+                     process.env.ANTHROPIC_API_KEY ? "Anthropic Claude" : "Local Intelligence";
   
   // Check if request wants JSON response
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
@@ -430,14 +431,18 @@ app.get('/health', async (req, res) => {
     healthCheck.checks.email = { status: 'unconfigured', message: 'Email credentials not set' };
   }
 
-  // Test AI service availability (prioritize Hugging Face)
+  // Test AI service availability (prioritize OpenAI, then Hugging Face)
   try {
     let aiService;
     let aiProvider = 'none';
     
-    if (process.env.HUGGINGFACE_API_TOKEN) {
+    if (process.env.OPENAI_API_KEY) {
+      const OpenAIService = require('../core/openaiService');
+      aiService = new OpenAIService();
+      aiProvider = 'OpenAI GPT-4';
+    } else if (process.env.HUGGINGFACE_API_TOKEN) {
       const HuggingFaceAIService = require('../core/huggingfaceService');
-      aiService = new HuggingFaceAIService(process.env.HUGGINGFACE_API_TOKEN);
+      aiService = new HuggingFaceAIService();
       aiProvider = 'Hugging Face Pro';
     } else if (process.env.ANTHROPIC_API_KEY) {
       const ClaudeAIService = require('../core/aiService');
@@ -453,9 +458,9 @@ app.get('/health', async (req, res) => {
       };
     } else {
       const availableProviders = [];
+      if (process.env.OPENAI_API_KEY) availableProviders.push('OpenAI GPT-4');
       if (process.env.HUGGINGFACE_API_TOKEN) availableProviders.push('Hugging Face');
       if (process.env.ANTHROPIC_API_KEY) availableProviders.push('Claude');
-      if (process.env.OPENAI_API_KEY) availableProviders.push('OpenAI');
       if (process.env.GEMINI_API_KEY) availableProviders.push('Gemini');
       
       if (availableProviders.length > 0) {
@@ -465,9 +470,11 @@ app.get('/health', async (req, res) => {
           providers: availableProviders
         };
       } else {
+        // Always have local intelligence as fallback
         healthCheck.checks.ai = { 
-          status: 'unconfigured', 
-          message: 'No AI providers configured (HUGGINGFACE_API_TOKEN, ANTHROPIC_API_KEY, etc.)' 
+          status: 'healthy', 
+          message: 'Intelligent Local Analysis active (configure OpenAI for enhanced features)',
+          providers: ['Local Intelligence']
         };
       }
     }
