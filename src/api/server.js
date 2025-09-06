@@ -178,47 +178,200 @@ app.use((req, res, next) => {
 // Root homepage route
 app.get('/', (req, res) => {
   const baseUrl = req.protocol + '://' + req.get('host');
+  const aiProvider = process.env.HUGGINGFACE_API_TOKEN ? "Hugging Face Pro" : 
+                     process.env.ANTHROPIC_API_KEY ? "Anthropic Claude" : "None";
   
-  res.json({
-    success: true,
-    message: "🚀 Email Integration Server with AI Features",
-    version: "1.0.0",
-    status: "running",
-    features: [
-      "📧 Email Management (IMAP)",
-      "🤖 AI-Powered Email Analysis", 
-      "🔄 Automated Email Verification",
-      "📊 Email Categorization & Sentiment Analysis",
-      "✍️ AI Response Generation",
-      "🔍 Action Item Extraction"
-    ],
-    endpoints: {
-      health: `${baseUrl}/health`,
-      email_api: {
-        base: `${baseUrl}/api/emails`,
-        latest: `${baseUrl}/api/emails/latest/:sender`,
-        search: `${baseUrl}/api/emails/search`,
-        extract_links: `${baseUrl}/api/emails/extract-links`
-      },
-      ai_api: {
-        base: `${baseUrl}/api/ai`,
-        status: `${baseUrl}/api/ai/status`,
-        analyze: `${baseUrl}/api/ai/analyze-email`,
-        generate_response: `${baseUrl}/api/ai/generate-response`,
-        categorize: `${baseUrl}/api/ai/categorize-emails`,
-        extract_actions: `${baseUrl}/api/ai/extract-actions`,
-        summarize: `${baseUrl}/api/ai/summarize-thread`,
-        smart_process: `${baseUrl}/api/ai/smart-process`
-      },
-      automation_api: {
-        base: `${baseUrl}/api/automation`,
-        verify_email: `${baseUrl}/api/automation/verify-email`
-      }
-    },
-    ai_provider: process.env.HUGGINGFACE_API_TOKEN ? "Hugging Face Pro" : 
-                 process.env.ANTHROPIC_API_KEY ? "Anthropic Claude" : "None",
-    timestamp: new Date().toISOString()
-  });
+  // Check if request wants JSON response
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return res.json({
+      success: true,
+      message: "🚀 Email Integration Server with AI Features",
+      version: "1.0.0",
+      status: "running",
+      ai_provider: aiProvider,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  // Return HTML for browser display
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Email Integration Server with AI Features</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 20px; 
+            padding: 30px; 
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+        }
+        .status { 
+            display: inline-block; 
+            background: #28a745; 
+            color: white; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            margin: 10px 0;
+        }
+        .ai-status { 
+            background: #ff6b35; 
+        }
+        .features { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin: 30px 0; 
+        }
+        .feature-card { 
+            background: rgba(255,255,255,0.2); 
+            padding: 20px; 
+            border-radius: 15px; 
+            border-left: 4px solid #ffd700;
+        }
+        .endpoints { 
+            margin-top: 40px; 
+        }
+        .endpoint-group { 
+            margin: 20px 0; 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px;
+        }
+        .endpoint { 
+            margin: 8px 0; 
+            padding: 8px 12px; 
+            background: rgba(255,255,255,0.2); 
+            border-radius: 5px; 
+            font-family: 'Courier New', monospace;
+        }
+        a { 
+            color: #ffd700; 
+            text-decoration: none; 
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+        .test-buttons { 
+            margin-top: 30px; 
+            text-align: center; 
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 12px 24px; 
+            margin: 5px; 
+            background: #28a745; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            font-weight: bold; 
+            transition: all 0.3s ease;
+        }
+        .btn:hover { 
+            background: #218838; 
+            transform: translateY(-2px); 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 40px; 
+            opacity: 0.8; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Email Integration Server</h1>
+            <p>AI-Powered Email Automation & Processing Platform</p>
+            <div class="status">✅ Server Running</div>
+            <div class="status ai-status">🤖 ${aiProvider} Active</div>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <h3>📧 Email Management</h3>
+                <p>IMAP integration for email retrieval, search, and link extraction</p>
+            </div>
+            <div class="feature-card">
+                <h3>🤖 AI Analysis</h3>
+                <p>Advanced email categorization, sentiment analysis, and priority scoring</p>
+            </div>
+            <div class="feature-card">
+                <h3>✍️ Response Generation</h3>
+                <p>AI-powered professional email response generation</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Automation</h3>
+                <p>Automated email verification workflows and batch processing</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Smart Processing</h3>
+                <p>Action item extraction, thread summarization, and language detection</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔍 Intelligence</h3>
+                <p>Multi-language support with premium Hugging Face models</p>
+            </div>
+        </div>
+
+        <div class="test-buttons">
+            <a href="${baseUrl}/health" class="btn">📊 Health Check</a>
+            <a href="${baseUrl}/api/ai/status" class="btn">🤖 AI Status</a>
+        </div>
+
+        <div class="endpoints">
+            <h2>📡 Available API Endpoints</h2>
+            
+            <div class="endpoint-group">
+                <h3>🤖 AI-Powered Features</h3>
+                <div class="endpoint">POST <a href="${baseUrl}/api/ai/analyze-email">/api/ai/analyze-email</a> - Comprehensive email analysis</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/ai/generate-response">/api/ai/generate-response</a> - AI response generation</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/ai/categorize-emails">/api/ai/categorize-emails</a> - Batch email categorization</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/ai/extract-actions">/api/ai/extract-actions</a> - Action item extraction</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/ai/summarize-thread">/api/ai/summarize-thread</a> - Thread summarization</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/ai/smart-process">/api/ai/smart-process</a> - Combined AI processing</div>
+            </div>
+            
+            <div class="endpoint-group">
+                <h3>📧 Email Management</h3>
+                <div class="endpoint">GET <a href="${baseUrl}/api/emails/latest/:sender">/api/emails/latest/:sender</a> - Get latest emails</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/emails/search">/api/emails/search</a> - Search emails</div>
+                <div class="endpoint">POST <a href="${baseUrl}/api/emails/extract-links">/api/emails/extract-links</a> - Extract verification links</div>
+            </div>
+            
+            <div class="endpoint-group">
+                <h3>🔄 Automation</h3>
+                <div class="endpoint">POST <a href="${baseUrl}/api/automation/verify-email">/api/automation/verify-email</a> - Email verification workflow</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>⚡ Powered by ${aiProvider} | 🌍 Running in ${process.env.NODE_ENV || 'development'} mode</p>
+            <p>🕒 Server started: ${new Date().toLocaleString()}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  
+  res.send(html);
 });
 
 // Routes
