@@ -5,8 +5,10 @@ const { apiKeyAuth, validateEmailInput } = require('../../middleware/auth');
 
 const router = express.Router();
 
-// Apply authentication to all routes
-router.use(apiKeyAuth);
+// Apply authentication to all routes (skip in development)
+if (process.env.NODE_ENV === 'production') {
+  router.use(apiKeyAuth);
+}
 
 // Validation middleware
 const validateEmailConfig = (req, res, next) => {
