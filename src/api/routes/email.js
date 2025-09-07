@@ -22,6 +22,90 @@ const validateEmailConfig = (req, res, next) => {
   next();
 };
 
+// Get all emails with pagination (inbox view)
+router.get('/inbox', validateEmailConfig, async (req, res) => {
+  let emailClient;
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+
+    // Validate input
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Limit must be between 1 and 100',
+      });
+    }
+
+    if (offset < 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Offset must be 0 or greater',
+      });
+    }
+
+    emailClient = new HostingerEmailClient(config.email);
+    await emailClient.connect();
+    const result = await emailClient.getAllEmails(limit, offset);
+
+    res.json({ 
+      success: true, 
+      ...result
+    });
+  } catch (error) {
+    console.error('Error fetching inbox:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date(),
+    });
+  } finally {
+    if (emailClient) {
+      emailClient.disconnect();
+    }
+  }
+});
+
+// Get specific email by ID
+router.get('/email/:messageId', validateEmailConfig, async (req, res) => {
+  let emailClient;
+  try {
+    const { messageId } = req.params;
+
+    // Validate input
+    if (!messageId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message ID is required',
+      });
+    }
+
+    emailClient = new HostingerEmailClient(config.email);
+    await emailClient.connect();
+    const email = await emailClient.getEmailById(messageId);
+
+    if (!email) {
+      return res.status(404).json({
+        success: false,
+        error: 'Email not found',
+      });
+    }
+
+    res.json({ success: true, email });
+  } catch (error) {
+    console.error('Error fetching email:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date(),
+    });
+  } finally {
+    if (emailClient) {
+      emailClient.disconnect();
+    }
+  }
+});
+
 // Get latest emails from sender
 router.get('/latest/:sender', validateEmailConfig, validateEmailInput, async (req, res) => {
   let emailClient;

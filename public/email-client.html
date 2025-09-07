@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Client - AI-Powered</title>
+    <link rel="stylesheet" href="/css/email-client.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="email-client">
+        <!-- Header -->
+        <header class="email-header">
+            <div class="header-left">
+                <h1>📧 AI Email Client</h1>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search emails..." id="email-search">
+                    <button class="search-btn">🔍</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="compose-btn" id="compose-btn">✍️ Compose</button>
+                <div class="ai-status">
+                    <span class="ai-indicator" id="ai-indicator">🤖</span>
+                    <span class="ai-label">AI Ready</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="email-layout">
+            <!-- Sidebar -->
+            <aside class="email-sidebar">
+                <div class="folder-list">
+                    <div class="folder-item active" data-folder="inbox">
+                        <span class="folder-icon">📥</span>
+                        <span class="folder-name">Inbox</span>
+                        <span class="folder-count" id="inbox-count">0</span>
+                    </div>
+                    <div class="folder-item" data-folder="sent">
+                        <span class="folder-icon">📤</span>
+                        <span class="folder-name">Sent</span>
+                    </div>
+                    <div class="folder-item" data-folder="drafts">
+                        <span class="folder-icon">📝</span>
+                        <span class="folder-name">Drafts</span>
+                    </div>
+                    <div class="folder-item" data-folder="archive">
+                        <span class="folder-icon">🗃️</span>
+                        <span class="folder-name">Archive</span>
+                    </div>
+                </div>
+
+                <div class="ai-shortcuts">
+                    <h3>🤖 AI Features</h3>
+                    <button class="ai-shortcut" data-action="analyze-batch">
+                        <span class="shortcut-icon">📊</span>
+                        <span class="shortcut-name">Analyze All</span>
+                    </button>
+                    <button class="ai-shortcut" data-action="categorize-batch">
+                        <span class="shortcut-icon">🏷️</span>
+                        <span class="shortcut-name">Auto Categorize</span>
+                    </button>
+                    <button class="ai-shortcut" data-action="extract-actions">
+                        <span class="shortcut-icon">📋</span>
+                        <span class="shortcut-name">Extract Actions</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Email List -->
+            <div class="email-list-panel">
+                <div class="list-header">
+                    <h2>Inbox</h2>
+                    <div class="list-controls">
+                        <button class="refresh-btn" id="refresh-btn">🔄</button>
+                        <select class="sort-select" id="sort-select">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="sender">By Sender</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="email-list" id="email-list">
+                    <div class="loading-emails">
+                        <div class="loading-spinner"></div>
+                        <p>Loading emails...</p>
+                    </div>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <button class="prev-btn" id="prev-btn" disabled>Previous</button>
+                    <span class="page-info" id="page-info">1 of 1</span>
+                    <button class="next-btn" id="next-btn" disabled>Next</button>
+                </div>
+            </div>
+
+            <!-- Email Content -->
+            <div class="email-content-panel" id="email-content-panel">
+                <div class="no-email-selected">
+                    <div class="no-email-icon">📧</div>
+                    <h3>Select an email to read</h3>
+                    <p>Choose an email from the list to view its content and use AI features</p>
+                </div>
+
+                <!-- Email View -->
+                <div class="email-view" id="email-view" style="display: none;">
+                    <div class="email-view-header">
+                        <div class="email-meta">
+                            <h2 class="email-subject" id="email-subject"></h2>
+                            <div class="email-from" id="email-from"></div>
+                            <div class="email-date" id="email-date"></div>
+                        </div>
+                        <div class="email-actions">
+                            <button class="action-btn" id="reply-btn">↩️ Reply</button>
+                            <button class="action-btn" id="forward-btn">↪️ Forward</button>
+                            <button class="action-btn ai-btn" id="analyze-btn">🤖 Analyze</button>
+                            <button class="action-btn ai-btn" id="generate-response-btn">✍️ Generate Response</button>
+                        </div>
+                    </div>
+
+                    <div class="email-content" id="email-content">
+                        <!-- Email content will be loaded here -->
+                    </div>
+
+                    <!-- AI Results Panel -->
+                    <div class="ai-results" id="ai-results" style="display: none;">
+                        <div class="ai-results-header">
+                            <h3>🤖 AI Analysis</h3>
+                            <button class="close-ai-btn" id="close-ai-btn">✕</button>
+                        </div>
+                        <div class="ai-results-content" id="ai-results-content">
+                            <!-- AI results will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compose Modal -->
+        <div class="compose-modal" id="compose-modal" style="display: none;">
+            <div class="compose-content">
+                <div class="compose-header">
+                    <h3>✍️ Compose Email</h3>
+                    <button class="close-compose-btn" id="close-compose-btn">✕</button>
+                </div>
+                <form class="compose-form" id="compose-form">
+                    <div class="compose-field">
+                        <label>To:</label>
+                        <input type="email" id="compose-to" placeholder="recipient@example.com" required>
+                    </div>
+                    <div class="compose-field">
+                        <label>Subject:</label>
+                        <input type="text" id="compose-subject" placeholder="Email subject" required>
+                    </div>
+                    <div class="compose-field">
+                        <label>Message:</label>
+                        <textarea id="compose-message" placeholder="Write your message..." rows="10" required></textarea>
+                    </div>
+                    <div class="compose-ai-tools">
+                        <button type="button" class="ai-tool-btn" id="ai-improve-btn">🤖 Improve with AI</button>
+                        <button type="button" class="ai-tool-btn" id="ai-tone-btn">🎭 Adjust Tone</button>
+                    </div>
+                    <div class="compose-actions">
+                        <button type="submit" class="send-btn">📤 Send Email</button>
+                        <button type="button" class="draft-btn">💾 Save Draft</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/email-client.js"></script>
+</body>
+</html>
