@@ -102,15 +102,28 @@ router.post('/extract-links', async (req, res) => {
     const { emailContent } = req.body;
 
     // Validate input
-    if (!emailContent || typeof emailContent !== 'object') {
+    if (!emailContent) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid email content. Expected object with text or html property.',
+        error: 'Email content is required.',
+      });
+    }
+
+    // Convert string content to object format if needed
+    let processedContent;
+    if (typeof emailContent === 'string') {
+      processedContent = { text: emailContent };
+    } else if (typeof emailContent === 'object') {
+      processedContent = emailContent;
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email content format.',
       });
     }
 
     const emailClient = new HostingerEmailClient(config.email);
-    const links = emailClient.extractVerificationLinks(emailContent);
+    const links = emailClient.extractVerificationLinks(processedContent);
 
     res.json({ success: true, links, count: links.length });
   } catch (error) {
