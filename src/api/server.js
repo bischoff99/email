@@ -188,19 +188,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Dashboard route - serve the web interface
+// Email client route - serve the main email interface
+app.get('/email-client', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../public/email-client.html'));
+});
+
+// Dashboard route - serve the legacy web interface
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
 
-// Root homepage route - redirect to dashboard or show API info
+// Root homepage route - redirect to email client or show API info
 app.get('/', (req, res) => {
   // Check if request prefers HTML (browser) vs JSON (API client)
   const acceptsHtml = req.headers.accept && req.headers.accept.includes('text/html');
   
   if (acceptsHtml) {
-    // Redirect browsers to the dashboard
-    return res.redirect('/dashboard');
+    // Redirect browsers to the email client
+    return res.redirect('/email-client');
   }
   const baseUrl = req.protocol + '://' + req.get('host');
   const aiProvider = process.env.OPENAI_API_KEY ? "OpenAI GPT-4" :
