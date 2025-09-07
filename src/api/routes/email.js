@@ -67,19 +67,40 @@ router.get('/latest/:sender', validateEmailConfig, validateEmailInput, async (re
 router.post('/search', validateEmailConfig, async (req, res) => {
   let emailClient;
   try {
-    const { criteria, options } = req.body;
+    const { criteria, options, sender, subject, limit } = req.body;
 
-    // Validate input
-    if (!criteria || !Array.isArray(criteria) || criteria.length === 0) {
+    // Build search criteria from user-friendly format or use raw criteria
+    let searchCriteria;
+    if (criteria && Array.isArray(criteria)) {
+      // Use raw criteria format
+      searchCriteria = criteria;
+    } else {
+      // Build criteria from individual fields
+      searchCriteria = [];
+      if (sender && sender.trim()) {
+        searchCriteria.push('FROM', sender.trim());
+      }
+      if (subject && subject.trim()) {
+        searchCriteria.push('SUBJECT', subject.trim());
+      }
+    }
+
+    // Validate that we have some criteria
+    if (!searchCriteria || searchCriteria.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid search criteria',
+        error: 'Please provide search criteria (sender, subject, or raw criteria array)',
       });
     }
 
+    const searchOptions = {
+      limit: limit || (options && options.limit) || 10,
+      ...options,
+    };
+
     emailClient = new HostingerEmailClient(config.email);
     await emailClient.connect();
-    const emails = await emailClient.searchEmails(criteria, options || {});
+    const emails = await emailClient.searchEmails(searchCriteria, searchOptions);
 
     res.json({ success: true, emails, count: emails.length });
   } catch (error) {
