@@ -36,7 +36,7 @@ class HuggingFaceAIService {
       analysisType = 'comprehensive'
     } = options;
 
-    let prompt = this.buildAnalysisPrompt(emailContent, analysisType);
+    const prompt = this.buildAnalysisPrompt(emailContent, analysisType);
 
     try {
       // Try external API first, but fall back to local analysis
@@ -59,7 +59,7 @@ class HuggingFaceAIService {
         } else {
           throw new Error('No JSON found in response');
         }
-      } catch (parseError) {
+      } catch {
         analysis = this.extractAnalysisFromText(emailContent, response.generated_text);
       }
 
@@ -71,7 +71,7 @@ class HuggingFaceAIService {
         timestamp: new Date().toISOString()
       };
 
-    } catch (error) {
+    } catch {
       // Use intelligent local analysis instead of basic fallback
       console.log('🔄 Using intelligent local analysis (external AI unavailable)');
       const localAnalysis = this.performLocalAnalysis(emailContent);
@@ -127,10 +127,10 @@ Response:`;
         provider: 'huggingface'
       };
 
-    } catch (error) {
+    } catch {
       // Use intelligent local response generation
       console.log('🔄 Using intelligent local response generation (external AI unavailable)');
-      const localResponse = this.generateLocalResponse(originalEmail, context, tone);
+      const localResponse = this.generateLocalResponse(originalEmail, tone);
       
       return {
         success: true,
@@ -259,7 +259,7 @@ JSON Response:`;
       try {
         const jsonMatch = response.generated_text.match(/\{[\s\S]*\}/);
         data = jsonMatch ? JSON.parse(jsonMatch[0]) : { action_items: [], has_deadlines: false, urgent_items: [] };
-      } catch (parseError) {
+      } catch {
         data = { action_items: [], has_deadlines: false, urgent_items: [] };
       }
 
@@ -450,7 +450,7 @@ Summary:`;
     }
   }
 
-  extractAnalysisFromText(originalEmailContent, fallbackText = '') {
+  extractAnalysisFromText(originalEmailContent) {
     // Advanced local AI analysis system - provides intelligent analysis without external APIs
     // Always analyze the original email content, not the model's generated text
     return this.performLocalAnalysis(originalEmailContent);
@@ -459,13 +459,12 @@ Summary:`;
   performLocalAnalysis(emailContent) {
     const content = emailContent.toLowerCase();
     const words = content.split(/\s+/);
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
     // Advanced categorization
     const category = this.detectCategory(content);
     const priority = this.detectPriority(content, words);
-    const sentiment = this.detectSentiment(content, words);
-    const urgencyScore = this.calculateUrgencyScore(content, words);
+    const sentiment = this.detectSentiment(content);
+    const urgencyScore = this.calculateUrgencyScore(content);
     const keyTopics = this.extractKeyTopics(content, words);
     const actionItems = this.extractActionItemsLocal(content);
     const detectedLanguage = this.detectLanguageLocal(content);
@@ -528,7 +527,7 @@ Summary:`;
     return 'medium';
   }
 
-  detectSentiment(content, words) {
+  detectSentiment(content) {
     const positiveWords = ['thank', 'thanks', 'great', 'excellent', 'amazing', 'wonderful', 'love', 'perfect', 'awesome', 'happy', 'pleased', 'satisfied'];
     const negativeWords = ['angry', 'frustrated', 'disappointed', 'terrible', 'awful', 'hate', 'worst', 'horrible', 'upset', 'complaint', 'problem', 'issue'];
     
@@ -540,7 +539,7 @@ Summary:`;
     return 'neutral';
   }
 
-  calculateUrgencyScore(content, words) {
+  calculateUrgencyScore(content) {
     let score = 5; // baseline
     
     if (content.includes('urgent')) score += 3;
@@ -605,7 +604,6 @@ Summary:`;
   }
 
   generateSummary(originalContent, category, priority) {
-    const content = originalContent.substring(0, 200);
     const templates = {
       'urgent': `Urgent ${priority} priority message requiring immediate attention`,
       'support': `Support request with ${priority} priority requiring assistance`,
@@ -619,7 +617,7 @@ Summary:`;
     return templates[category] || templates['general'];
   }
 
-  generateLocalResponse(originalEmail, context = '', tone = 'professional') {
+  generateLocalResponse(originalEmail, tone = 'professional') {
     const email = originalEmail.toLowerCase();
     
     // Detect the type of email and intent

@@ -5,8 +5,8 @@ const { apiKeyAuth, validateEmailInput } = require('../../middleware/auth');
 
 const router = express.Router();
 
-// Apply authentication to all routes (skip in development)
-if (process.env.NODE_ENV === 'production') {
+// Apply authentication to all routes (always, except in development without explicit test mode)
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test' || process.env.ENABLE_AUTH === 'true') {
   router.use(apiKeyAuth);
 }
 

@@ -151,7 +151,7 @@ app.use(limiter);
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../../public'), {
   maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
-  setHeaders: (res, path) => {
+  setHeaders: (res) => {
     // Disable caching for development
     if (process.env.NODE_ENV !== 'production') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -540,7 +540,7 @@ if (process.env.NODE_ENV === 'development') {
 Sentry.setupExpressErrorHandler(app);
 
 // Optional fallthrough error handler
-app.use(function onError(err, req, res, next) {
+app.use(function onError(err, req, res) {
   // Log the error
   logger.error('Unhandled error:', {
     error: err.message,

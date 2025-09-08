@@ -1,0 +1,102 @@
+name: Code Quality Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for better analysis
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run ESLint with detailed output
+      run: |
+        npm run lint -- --format json --output-file eslint-report.json || true
+        npm run lint
+        
+    - name: Run Prettier format check
+      run: npm run format:check
+      
+    - name: Check code complexity
+      run: |
+        npx madge --circular --extensions js src/
+        npx madge --json --extensions js src/ > complexity-report.json
+        
+    - name: Run tests with coverage
+      run: npm run test:coverage
+      
+    - name: Generate test report
+      run: |
+        npx jest --testResultsProcessor jest-sonar-reporter
+      continue-on-error: true
+      
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      continue-on-error: true
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-quality-reports
+        path: |
+          eslint-report.json
+          complexity-report.json
+          coverage/
+        retention-days: 30
+        
+    - name: Code Quality Gate
+      run: |
+        echo "📊 Code Quality Summary:"
+        echo "========================"
+        
+        # Check test coverage
+        COVERAGE=$(grep -o '"pct":[0-9.]*' coverage/coverage-summary.json | head -1 | cut -d':' -f2)
+        echo "📈 Test Coverage: $COVERAGE%"
+        
+        if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+          echo "❌ Coverage below threshold (80%)"
+          exit 1
+        fi
+        
+        # Check for ESLint errors
+        if [ -f eslint-report.json ]; then
+          ERRORS=$(jq '[.[] | .errorCount] | add' eslint-report.json)
+          echo "🔍 ESLint Errors: $ERRORS"
+          
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "❌ ESLint errors found"
+            exit 1
+          fi
+        fi
+        
+        echo "✅ All quality gates passed!"
