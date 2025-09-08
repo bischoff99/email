@@ -1,0 +1,67 @@
+name: Dependency Security Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run dependency check every Sunday at 2:00 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  dependency-check:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run npm audit
+      run: |
+        # Generate audit report
+        npm audit --audit-level=low --json > audit-report.json || true
+        npm audit --audit-level=high
+      continue-on-error: true
+      
+    - name: Upload audit report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: npm-audit-report
+        path: audit-report.json
+        retention-days: 30
+        
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --file=package.json
+        
+    - name: Upload Snyk results to GitHub Code Scanning
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: snyk.sarif
+        
+    - name: Check for critical vulnerabilities
+      run: |
+        if npm audit --audit-level=critical --dry-run; then
+          echo "✅ No critical vulnerabilities found"
+        else
+          echo "❌ Critical vulnerabilities detected"
+          npm audit --audit-level=critical
+          exit 1
+        fi

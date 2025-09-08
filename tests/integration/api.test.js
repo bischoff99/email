@@ -43,7 +43,7 @@ describe('API Integration Tests', () => {
     test('GET /api/emails/latest/test@example.com with valid API key should proceed (may fail due to missing email config)', async () => {
       const response = await request(app)
         .get('/api/emails/latest/test@example.com')
-        .set('X-API-Key', 'dev-api-key');
+        .set('X-API-Key', 'test-api-key');
 
       // Should either return 500 (missing email config) or 200 (if configured)
       expect(response.status).toBeOneOf([200, 500]);
@@ -55,7 +55,7 @@ describe('API Integration Tests', () => {
     test('GET /api/emails/latest/invalid-email with valid API key should return 400', async () => {
       const response = await request(app)
         .get('/api/emails/latest/invalid-email')
-        .set('X-API-Key', 'dev-api-key');
+        .set('X-API-Key', 'test-api-key');
 
       // Should return 400 for invalid email format or 500 if email config missing
       expect(response.status).toBeOneOf([400, 500]);
@@ -70,7 +70,7 @@ describe('API Integration Tests', () => {
     test('POST /api/emails/extract-links with invalid body should return 400', async () => {
       const response = await request(app)
         .post('/api/emails/extract-links')
-        .set('X-API-Key', 'dev-api-key')
+        .set('X-API-Key', 'test-api-key')
         .send({ invalidField: 'value' })
         .expect(400);
 
@@ -81,7 +81,7 @@ describe('API Integration Tests', () => {
     test('POST /api/emails/extract-links with valid body should return 200', async () => {
       const response = await request(app)
         .post('/api/emails/extract-links')
-        .set('X-API-Key', 'dev-api-key')
+        .set('X-API-Key', 'test-api-key')
         .send({
           emailContent: {
             text: 'Click here to verify: https://example.com/verify?token=abc123',

@@ -35,7 +35,6 @@ class ClaudeAIService {
 
     const {
       model = this.models.smart,
-      includeResponse = false,
       analysisType = 'comprehensive'
     } = options;
 
@@ -109,7 +108,7 @@ Return JSON with security assessment.`;
       let analysis;
       try {
         analysis = JSON.parse(response.content[0].text);
-      } catch (parseError) {
+      } catch {
         // Fallback if JSON parsing fails
         analysis = {
           raw_analysis: response.content[0].text,

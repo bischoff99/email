@@ -14,3 +14,32 @@ build/
 logs/
 coverage/
 .nyc_output/
+
+# Testing and quality reports
+test-results/
+eslint-report.json
+complexity-report.json
+audit-report.json
+license-report.json
+license-report.csv
+updates.json
+update_summary.md
+
+# SonarQube
+.sonarqube/
+.scannerwork/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp

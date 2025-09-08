@@ -273,7 +273,7 @@ class MultiAIService {
       } else {
         return JSON.parse(response);
       }
-    } catch (error) {
+    } catch {
       // Fallback if JSON parsing fails
       return {
         category: 'general',

@@ -1,0 +1,176 @@
+name: Stale Issues and PRs Management
+
+on:
+  schedule:
+    # Run every day at 8:00 AM UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  stale-management:
+    name: Manage Stale Issues and PRs
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      
+    steps:
+    - name: Mark stale issues and PRs
+      uses: actions/stale@v9
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        
+        # Stale issue configuration
+        stale-issue-message: |
+          👋 Hey there! This issue has been automatically marked as stale because it hasn't had any activity for 30 days.
+          
+          📝 If this issue is still relevant, please add a comment to keep it open.
+          🔄 If you need help or have questions, feel free to reach out to the maintainers.
+          ⏰ This issue will be automatically closed in 7 days if no further activity occurs.
+          
+          Thanks for your contribution! 🙏
+          
+        close-issue-message: |
+          🔒 This issue has been automatically closed due to inactivity.
+          
+          💡 If you believe this issue should remain open, please reopen it and provide an update.
+          📬 Feel free to create a new issue if you're experiencing a similar problem.
+          
+          Thank you for your understanding! 🙏
+          
+        # Stale PR configuration  
+        stale-pr-message: |
+          👋 Hello! This pull request has been automatically marked as stale because it hasn't had any activity for 14 days.
+          
+          🔄 To keep this PR active, please:
+          - Rebase against the latest main branch
+          - Address any requested changes
+          - Add a comment explaining the current status
+          
+          ⏰ This PR will be automatically closed in 7 days if no further activity occurs.
+          
+          Thanks for your contribution! 🚀
+          
+        close-pr-message: |
+          🔒 This pull request has been automatically closed due to inactivity.
+          
+          💡 If you'd like to continue working on this:
+          - Reopen the PR and provide an update
+          - Create a new PR with the latest changes
+          
+          Thank you for your contribution! 🙏
+          
+        # Timing configuration
+        days-before-stale: 30
+        days-before-close: 7
+        days-before-pr-stale: 14
+        days-before-pr-close: 7
+        
+        # Labels
+        stale-issue-label: 'status/stale'
+        stale-pr-label: 'status/stale'
+        exempt-issue-labels: 'status/pinned,type/bug,priority/high,status/blocked'
+        exempt-pr-labels: 'status/pinned,type/hotfix,priority/high,status/blocked'
+        
+        # Additional options
+        remove-stale-when-updated: true
+        delete-branch: true
+        operations-per-run: 100
+        
+        # Enable debug logging
+        debug-only: false
+
+  cleanup-branches:
+    name: Cleanup Merged Branches
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Delete merged branches
+      run: |
+        echo "🧹 Cleaning up merged branches..."
+        
+        # Get all remote branches
+        git fetch --all --prune
+        
+        # List merged branches (excluding main and develop)
+        MERGED_BRANCHES=$(git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/develop" | grep -v "origin/HEAD" | sed 's/origin\///')
+        
+        if [ -z "$MERGED_BRANCHES" ]; then
+          echo "✅ No merged branches to clean up"
+        else
+          echo "📋 Found merged branches:"
+          echo "$MERGED_BRANCHES"
+          
+          # Note: We don't actually delete branches here for safety
+          # This would require additional permissions and careful consideration
+          echo "ℹ️ Branch cleanup requires manual review for safety"
+        fi
+        
+  issue-metrics:
+    name: Generate Issue Metrics
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      issues: read
+      pull-requests: read
+      
+    steps:
+    - name: Generate metrics report
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'all',
+            per_page: 100
+          });
+          
+          const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open');
+          const closedIssues = issues.filter(issue => !issue.pull_request && issue.state === 'closed');
+          const openPRs = issues.filter(issue => issue.pull_request && issue.state === 'open');
+          const closedPRs = issues.filter(issue => issue.pull_request && issue.state === 'closed');
+          
+          // Calculate average time to close
+          const calculateAvgTimeToClose = (closedItems) => {
+            if (closedItems.length === 0) return 'N/A';
+            
+            const totalTime = closedItems.reduce((sum, item) => {
+              const created = new Date(item.created_at);
+              const closed = new Date(item.closed_at);
+              return sum + (closed - created);
+            }, 0);
+            
+            const avgMs = totalTime / closedItems.length;
+            const avgDays = Math.round(avgMs / (1000 * 60 * 60 * 24));
+            return `${avgDays} days`;
+          };
+          
+          const metrics = `## 📊 Repository Metrics Report
+          
+          ### 📋 Issues
+          - **Open**: ${openIssues.length}
+          - **Closed**: ${closedIssues.length}
+          - **Average time to close**: ${calculateAvgTimeToClose(closedIssues)}
+          
+          ### 🔄 Pull Requests  
+          - **Open**: ${openPRs.length}
+          - **Closed**: ${closedPRs.length}
+          - **Average time to close**: ${calculateAvgTimeToClose(closedPRs)}
+          
+          ### 📈 Health Score
+          - **Issue closure rate**: ${closedIssues.length > 0 ? Math.round((closedIssues.length / (openIssues.length + closedIssues.length)) * 100) : 0}%
+          - **PR closure rate**: ${closedPRs.length > 0 ? Math.round((closedPRs.length / (openPRs.length + closedPRs.length)) * 100) : 0}%
+          
+          ---
+          *Generated on ${new Date().toISOString()}*`;
+          
+          console.log(metrics);
